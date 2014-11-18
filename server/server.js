@@ -50,14 +50,8 @@ app.get('/logout', site.logout);
 app.get('/account', site.account);
 app.get('/callback', site.callbackPage);
 
-
-// -- Mount static files here--
-// All static middleware should be registered at the end, as all requests
-// passing the static middleware are hitting the file system
-// Example:
-//   app.use(loopback.static(path.resolve(__dirname', '../client')));
-
-oauth2.authenticate(['/protected', '/api', '/me'], {session: false, scope: 'demo'});
+var auth = oauth2.authenticate({session: false, scope: 'demo'});
+app.use(['/protected', '/api', '/me'], auth);
 
 app.get('/me', function(req, res, next) {
   // req.authInfo is set using the `info` argument supplied by
