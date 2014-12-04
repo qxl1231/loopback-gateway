@@ -31,7 +31,7 @@ boot(app, __dirname);
 
 // Redirect http requests to https
 var httpsPort = app.get('https-port');
-app.use('routes', httpsRedirect({httpsPort: httpsPort}));
+app.middleware('routes', httpsRedirect({httpsPort: httpsPort}));
 
 var oauth2 = require('loopback-component-oauth2')(
   app, {
@@ -65,22 +65,24 @@ app.get('/me', function(req, res, next) {
 signupTestUserAndApp();
 
 var rateLimiting = require('./middleware/rate-limiting');
-app.use('routes:after', rateLimiting({limit: 100, interval: 60000}));
+app.middleware('routes:after', rateLimiting({limit: 100, interval: 60000}));
 
 var proxy = require('./middleware/proxy');
 var proxyOptions = require('./middleware/proxy/config.json');
-app.use('routes:after', proxy(proxyOptions));
+app.middleware('routes:after', proxy(proxyOptions));
 
-app.use(loopback.static(path.join(__dirname, '../client/public')));
-app.use('/admin', loopback.static(path.join(__dirname, '../client/admin')));
+app.middleware('files',
+  loopback.static(path.join(__dirname, '../client/public')));
+app.middleware('files', '/admin',
+  loopback.static(path.join(__dirname, '../client/admin')));
 
 // Requests that get this far won't be handled
 // by any middleware. Convert them into a 404 error
 // that will be handled later down the chain.
-app.use('final', loopback.urlNotFound());
+app.middleware('final', loopback.urlNotFound());
 
 // The ultimate error handler.
-app.use('final', loopback.errorHandler());
+app.middleware('final', loopback.errorHandler());
 
 app.start = function() {
   var port = app.get('port');
